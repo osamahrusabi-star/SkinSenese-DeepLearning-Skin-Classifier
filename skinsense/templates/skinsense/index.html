@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkinSense | Intelligent Skin Diagnosis</title>
+    <style>
+        /* ===== BASE STYLES ===== */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: #F5F7FA;
+            color: #1E1E1E;
+        }
+        /* ===== NAVBAR ===== */
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: #4A9ACF;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo img {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .logo h1 {
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+        }
+        
+        nav a {
+            margin-left: 1.2rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+        
+        nav a:hover,
+        nav a.active {
+            color: #FFD700;
+        }
+        /* ===== HERO SECTION ===== */
+        
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 80vh;
+            background: linear-gradient(135deg, #4A9ACF 0%, #2B6CA3 100%);
+            color: white;
+            padding: 2rem;
+        }
+        
+        .hero h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            max-width: 600px;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            background: white;
+            color: #2B6CA3;
+            padding: 0.8rem 1.8rem;
+            border: none;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .btn:hover {
+            background: #FFD700;
+            color: #1E1E1E;
+        }
+        /* ===== FEATURE SECTION ===== */
+        
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            padding: 4rem 2rem;
+            background: white;
+        }
+        
+        .feature-card {
+            width: 300px;
+            background: #F5F7FA;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            padding: 2rem;
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-card h3 {
+            color: #2B6CA3;
+            margin-bottom: 0.5rem;
+        }
+        /* ===== FOOTER ===== */
+        
+        footer {
+            background: #2B6CA3;
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ===== HEADER ===== -->
+    <header>
+        <div class="logo">
+            <img src="{% static 'skinsense/logo2.png' %}" alt="SkinSense Logo" />
+            <h1>SkinSense</h1>
+        </div>
+        <nav>
+            <a href="{% url 'skinsense:index' %}" class="active">Home</a>
+            <a href="{% url 'skinsense:login' %}">Login</a>
+            <a href="{% url 'skinsense:register' %}">Register</a>
+            <a href="{% url 'skinsense:about' %}">About</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h2>AI-Powered Skin Health Assistant</h2>
+        <p>Detect, track, and analyze skin conditions with deep learning accuracy. Get instant diagnosis and AI-based care recommendations.</p>
+        <a href="{% url 'skinsense:login' %}"><button class="btn">Start Diagnosis</button></a>
+    </section>
+
+    <section class="features">
+        <div class="feature-card">
+            <h3>🧠 Smart Detection</h3>
+            <p>Identify acne, eczema, and more through AI-based image classification.</p>
+        </div>
+        <div class="feature-card">
+            <h3>📊 Risk Analysis</h3>
+            <p>Understand your skin health level and risk factors with real-time scoring.</p>
+        </div>
+        <div class="feature-card">
+            <h3>💡 AI Advice</h3>
+            <p>Receive personalized skincare tips and professional recommendations.</p>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2025 SkinSense | Developed by Group 27, Albukhary International University</p>
+    </footer>
+</body>
+
+</html>

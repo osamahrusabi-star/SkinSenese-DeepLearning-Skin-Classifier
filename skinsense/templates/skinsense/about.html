@@ -1,0 +1,218 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkinSense | About</title>
+    <style>
+        /* ===== BASE STYLES ===== */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: #F5F7FA;
+            color: #1E1E1E;
+        }
+        /* ===== NAVBAR ===== */
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: #4A9ACF;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo img {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .logo h1 {
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+        }
+        
+        nav a {
+            margin-left: 1.2rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+        
+        nav a:hover,
+        nav a.active {
+            color: #FFD700;
+        }
+        /* ===== ABOUT SECTION ===== */
+        
+        .about-container {
+            max-width: 1000px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .about-container h2 {
+            color: #2B6CA3;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .about-container p {
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+        
+        .about-container h3 {
+            color: #4A9ACF;
+            margin-top: 2rem;
+        }
+        /* ===== TEAM SECTION ===== */
+        
+        .team-section {
+            background: #F5F7FA;
+            padding: 3rem 2rem;
+        }
+        
+        .team-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+        }
+        
+        .team-member {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            text-align: center;
+            width: 220px;
+            transition: transform 0.3s;
+        }
+        
+        .team-member:hover {
+            transform: translateY(-5px);
+        }
+        
+        .team-member img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            object-fit: cover;
+        }
+        
+        .team-member h4 {
+            color: #2B6CA3;
+        }
+        
+        .team-member p {
+            font-size: 0.9rem;
+            color: #555;
+        }
+        /* ===== FOOTER ===== */
+        
+        footer {
+            background: #2B6CA3;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ===== HEADER ===== -->
+    <header>
+        <div class="logo">
+            <img src="{% static 'logo2.png' %}" alt="SkinSense Logo" />
+
+            <h1>SkinSense</h1>
+        </div>
+        <nav>
+            <a href="{% url 'skinsense:index' %}">Home</a>
+            <a href="{% url 'skinsense:login' %}">Login</a>
+            <a href="{% url 'skinsense:register' %}">Register</a>
+            <a href="{% url 'skinsense:about' %}" class="active">About</a>
+        </nav>
+    </header>
+
+    <!-- ===== ABOUT CONTENT ===== -->
+    <section class="about-container">
+        <h2>About SkinSense</h2>
+        <p>
+            <strong>SkinSense</strong> is an intelligent, AI-powered skin condition diagnosis system designed to assist individuals in understanding their skin health through image analysis. By leveraging deep learning models, the system can detect common
+            skin conditions including acne, eczema, and vitiligo.
+        </p>
+
+        <p>
+            The platform allows users to upload a facial image securely, where the model evaluates the condition and provides instant results such as predicted skin issue, confidence level, and risk assessment. Additionally, the system integrates the <strong>Gemini API</strong>            to generate personalized skincare advice for each user.
+        </p>
+
+        <h3>Our Mission</h3>
+        <p>
+            To create a reliable, accessible, and AI-driven digital health solution that promotes early awareness and preventive skincare practices through intelligent analysis and personalized insights.
+        </p>
+
+        <h3>Technologies Used</h3>
+        <ul style="margin-left:2rem; line-height:1.8;">
+            <li>Frontend: HTML, CSS, JavaScript</li>
+            <li>Backend: Django REST Framework</li>
+            <li>AI Model: MobileNetV2 / ResNet50 (TensorFlow)</li>
+            <li>Database: PostgreSQL</li>
+            <li>API Integration: Gemini AI API for advice generation</li>
+        </ul>
+    </section>
+
+    <!-- ===== TEAM SECTION ===== -->
+    <section class="team-section">
+        <h2 style="text-align:center; color:#2B6CA3; margin-bottom:2rem;">Meet the Team</h2>
+        <div class="team-grid">
+            <div class="team-member">
+                <img src="{% static 'skinsense/member1.jpg' %}" alt="Team Member 1" />
+                <h4>Member 1</h4>
+                <p>Project Leader</p>
+            </div>
+            <div class="team-member">
+                <img src="https://via.placeholder.com/80" alt="Team Member 2" />
+                <h4>Member 2</h4>
+                <p>Frontend & UI Designer</p>
+            </div>
+            <div class="team-member">
+                <img src="https://via.placeholder.com/80" alt="Team Member 3" />
+                <h4>Member 3</h4>
+                <p>Backend & API Engineer</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <p>© 2025 SkinSense | Developed by Group 27, Albukhary International University</p>
+    </footer>
+</body>
+
+</html>

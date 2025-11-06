@@ -1,0 +1,366 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkinSense | Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: #F5F7FA;
+            color: #1E1E1E;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: #4A9ACF;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo img {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .logo h1 {
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+        }
+        
+        nav a {
+            margin-left: 1.2rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+        
+        nav a:hover {
+            color: #FFD700;
+        }
+        
+        .dashboard {
+            max-width: 800px;
+            margin: 3rem auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .dashboard h2 {
+            color: #2B6CA3;
+            margin-bottom: 1rem;
+        }
+        
+        .dashboard p {
+            color: #555;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-box {
+            border: 2px dashed #4A9ACF;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            background: #F5F7FA;
+        }
+        
+        .upload-options {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-options button {
+            background: #4A9ACF;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .upload-options button:hover {
+            background: #2B6CA3;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        #preview {
+            display: none;
+            max-width: 300px;
+            border-radius: 10px;
+            margin: 1rem auto;
+        }
+        
+        .btn {
+            background: #4A9ACF;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .btn:hover {
+            background: #2B6CA3;
+        }
+        
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #ccc;
+            border-top-color: #4A9ACF;
+            border-radius: 50%;
+            margin: 2rem auto;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .results {
+            display: none;
+            margin-top: 2rem;
+            text-align: left;
+        }
+        
+        .card {
+            background: #eef5ff;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .advice {
+            background: #e8fbea;
+            border-left: 4px solid #32a852;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+        
+        canvas {
+            margin-top: 1.5rem;
+        }
+        
+        footer {
+            background: #2B6CA3;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 3rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ===== HEADER ===== -->
+    <header>
+        <div class="logo">
+            <img src="{% static 'skinsense/logo2.png' %}" alt="SkinSense Logo" />
+            <h1>SkinSense</h1>
+        </div>
+        <nav>
+            <a href="{% url 'skinsense:about' %}">About</a>
+            <a href="{% url 'skinsense:followup' %}">Follow-Up</a>
+            <a href="{% url 'skinsense:logout' %}">Logout</a>
+        </nav>
+    </header>
+
+    <!-- ===== DASHBOARD CONTENT ===== -->
+    <section class="dashboard">
+        <h2>Upload Your Skin Image</h2>
+        <p>Choose an image from your device or take one using your camera.</p>
+
+        <div class="upload-box">
+            <div class="upload-options">
+                <button id="fromDevice">Add from Device</button>
+                <button id="fromCamera">Add from Camera</button>
+            </div>
+
+            <input type="file" id="imageDevice" accept="image/*" />
+            <input type="file" id="imageCamera" accept="image/*" capture="environment" />
+
+            <img id="preview" alt="Preview" />
+
+            <button id="submitBtn" class="btn">Submit</button>
+            <button id="viewResultBtn" class="btn" style="display:none; margin-top:1rem;">View Result</button>
+        </div>
+
+        <div class="loader" id="loading"></div>
+
+        <div class="results" id="results">
+            <div class="card">
+                <h3>Condition: <span id="condition"></span></h3>
+                <p><strong>Confidence:</strong> <span id="confidence"></span></p>
+                <p><strong>Risk Level:</strong> <span id="risk"></span></p>
+            </div>
+            <div class="advice">
+                <h3>AI Recommendation</h3>
+                <p id="advice"></p>
+            </div>
+            <canvas id="chart"></canvas>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2025 SkinSense | Developed by Group 27, Albukhary International University</p>
+    </footer>
+
+    <!-- ===== SCRIPT ===== -->
+    <script>
+        // ===== LOGOUT =====
+        const logoutLink = document.querySelector('a[href="{% url "skinsense:logout" %}"]');
+        logoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = "{% url 'skinsense:logout' %}";
+        });
+
+        // ===== IMAGE UPLOAD LOGIC =====
+        const fromDevice = document.getElementById('fromDevice');
+        const fromCamera = document.getElementById('fromCamera');
+        const imageDevice = document.getElementById('imageDevice');
+        const imageCamera = document.getElementById('imageCamera');
+        const preview = document.getElementById('preview');
+
+        fromDevice.addEventListener('click', () => imageDevice.click());
+        fromCamera.addEventListener('click', () => imageCamera.click());
+
+        imageDevice.addEventListener('change', handleImage);
+        imageCamera.addEventListener('change', handleImage);
+
+        function handleImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                preview.src = reader.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        const viewResultBtn = document.getElementById('viewResultBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+
+        submitBtn.addEventListener('click', () => {
+            const imgSrc = preview.src;
+            if (!imgSrc) {
+                alert('Please select or capture an image first.');
+                return;
+            }
+
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            viewResultBtn.style.display = 'none';
+
+            setTimeout(() => {
+                loading.style.display = 'none';
+                viewResultBtn.style.display = 'inline-block';
+                alert('Image submitted successfully! Click "View Result" to see analysis.');
+            }, 2000);
+        });
+
+        viewResultBtn.addEventListener('click', async() => {
+            const file = imageDevice.files[0] || imageCamera.files[0];
+            if (!file) {
+                alert('Please select or capture an image first.');
+                return;
+            }
+
+            loading.style.display = 'block';
+            results.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('http://localhost:8000/api/analyze/', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const data = await response.json();
+
+                loading.style.display = 'none';
+                results.style.display = 'block';
+
+                document.getElementById('condition').textContent = data.condition || 'Unknown';
+                document.getElementById('confidence').textContent =
+                    data.confidence ? (data.confidence * 100).toFixed(1) + '%' : 'N/A';
+                document.getElementById('risk').textContent = data.risk_level || 'N/A';
+                document.getElementById('advice').textContent = data.advice || 'No advice available.';
+
+                if (data.timeline) renderChart(data.timeline);
+            } catch (error) {
+                console.error('Error:', error);
+                loading.style.display = 'none';
+                alert('Something went wrong. Please try again later.');
+            }
+        });
+
+        function renderChart() {
+            const ctx = document.getElementById('chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Scan 1', 'Scan 2', 'Scan 3', 'Scan 4'],
+                    datasets: [{
+                        label: 'AI Confidence',
+                        data: [0.6, 0.72, 0.85, 0.87],
+                        borderColor: '#4A9ACF',
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
