@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout, get_user_model
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from .gemini_client import generate_ai_response
 
 
 # === HOME PAGE ===
@@ -82,3 +84,48 @@ def logout_user(request):
     django_logout(request)
     messages.success(request, "You have been logged out.")
     return redirect('skinsense:login')
+
+def gemini_api(request):
+    """Handles Gemini API requests from frontend."""
+    if request.method == "POST":
+        import json
+        body = json.loads(request.body)
+        user_input = body.get("prompt", "")
+
+        if not user_input:
+            return JsonResponse({"error": "No prompt provided."}, status=400)
+
+        try:
+            ai_response = generate_ai_response(user_input)
+            return JsonResponse({"response": ai_response})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+# === GEMINI AI API (NEW ENDPOINT) ===
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+from .gemini_client import generate_ai_response
+
+
+@csrf_exempt  # disable CSRF just for testing
+def ai_advice_api(request):
+    """Handle POST requests to send text to Gemini and return AI advice."""
+    if request.method == "POST":
+        try:
+            body = json.loads(request.body)
+            user_text = body.get("text", "").strip()
+
+            if not user_text:
+                return JsonResponse({"error": "No text provided."}, status=400)
+
+            ai_response = generate_ai_response(user_text)
+            return JsonResponse({"response": ai_response})
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

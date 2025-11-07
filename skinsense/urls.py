@@ -11,4 +11,6 @@ urlpatterns = [
     path('dashboard/', views.dashboard_page, name='dashboard_page'),
     path('followup/', views.followup_page, name='followup'),
     path('logout/', views.logout_user, name='logout'),
+    path('api/gemini/', views.gemini_api, name='gemini_api'),
+    path('api/ai_advice/', views.ai_advice_api, name='ai_advice_api'),
 ]
