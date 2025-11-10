@@ -1,20 +1,39 @@
 # skinsense/gemini_client.py
-# Requires: pip install google-genai
+# Requires: pip install google-genai python-dotenv
 
 import os
+from pathlib import Path
 from google import genai
 from google.genai import types
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+
+# Load .env from project root
+env_path = Path(__file__).resolve().parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 
 def generate_ai_response(prompt: str):
     """
     Sends a text prompt to the Gemini 2.5 Pro model and returns a structured, user-friendly skincare recommendation.
     """
+    
+    # --- Get API key ---
+    api_key = os.environ.get("GEMINI_API_KEY")
+    
+    if not api_key or api_key == "your_api_key_here":
+        raise ValueError(
+            "Gemini API key is not configured!\n"
+            "Please follow these steps:\n"
+            "1. Get your API key from: https://aistudio.google.com/apikey\n"
+            "2. Open the file: .env in your project root\n"
+            "3. Replace 'your_api_key_here' with your actual API key\n"
+            "4. Restart the Django server"
+        )
 
     # --- Initialize the client ---
-    client = genai.Client(
-        api_key=os.environ.get("GEMINI_API_KEY")
-    )
+    client = genai.Client(api_key=api_key)
 
     model = "gemini-2.5-pro"
 

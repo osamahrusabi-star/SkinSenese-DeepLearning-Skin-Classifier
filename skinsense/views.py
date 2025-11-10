@@ -4,6 +4,14 @@ from django.contrib.auth import authenticate, login as django_login, logout as d
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from .gemini_client import generate_ai_response
+#----------------------------------------------------------------------
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from tensorflow.keras.preprocessing import image
+import numpy as np
+import os
+from .model_loader import get_model
+from .gemini_client import generate_ai_response  # ✅ to talk to Gemini
 
 
 # === HOME PAGE ===
@@ -129,3 +137,210 @@ def ai_advice_api(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+@csrf_exempt
+def analyze_image(request):
+    if request.method == 'POST' and request.FILES.get('image'):
+        img_file = request.FILES['image']
+        temp_path = os.path.join('media', img_file.name)
+        os.makedirs('media', exist_ok=True)
+
+        # Save the uploaded file
+        with open(temp_path, 'wb+') as f:
+            for chunk in img_file.chunks():
+                f.write(chunk)
+
+        # Preprocess image for MobileNetV2
+        img = image.load_img(temp_path, target_size=(224, 224))
+        img_array = image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0) / 255.0
+
+        # Get the model (lazy loaded)
+        skin_model = get_model()
+        
+        # Predict with your CNN
+        preds = skin_model.predict(img_array)
+        class_index = np.argmax(preds)
+        confidence = float(np.max(preds))
+
+        # Update these to your actual dataset classes
+        class_labels = ['acne', 'eczema', 'fungal infections', 'melasma', 'rosacea', 'vitiligo']
+        predicted_condition = class_labels[class_index]
+
+        # Determine risk level based on condition and confidence
+        if predicted_condition in ['melasma', 'vitiligo']:
+            risk_level = 'High'
+        elif predicted_condition in ['eczema', 'rosacea']:
+            risk_level = 'Medium'
+        else:
+            risk_level = 'Low'
+
+        # Get smart advice from Gemini
+        try:
+            gemini_prompt = f"The user uploaded a skin image. The CNN model predicted {predicted_condition} with {confidence:.2%} confidence. Risk Level: {risk_level}. Provide detailed, user-friendly advice about this condition."
+            ai_advice = generate_ai_response(gemini_prompt)
+        except ValueError as e:
+            # API key not configured
+            ai_advice = (
+                f"AI advice is currently unavailable (API key not configured).\n\n"
+                f"Basic information about {predicted_condition}:\n"
+                f"Please consult a dermatologist for proper diagnosis and treatment.\n\n"
+                f"Error: {str(e)}"
+            )
+        except Exception as e:
+            # Other errors
+            ai_advice = (
+                f"Unable to get AI advice at this time.\n\n"
+                f"For {predicted_condition}, please consult a dermatologist.\n\n"
+                f"Error: {str(e)}"
+            )
+
+        # Save to database if user is logged in
+        if request.user.is_authenticated:
+            from .models import Case
+            # Save the image permanently
+            from django.core.files.base import ContentFile
+            saved_image = ContentFile(img_file.read())
+            
+            case = Case.objects.create(
+                user=request.user,
+                condition=predicted_condition,
+                confidence=confidence,
+                risk_level=risk_level,
+                advice=ai_advice
+            )
+            case.image.save(img_file.name, saved_image, save=True)
+
+        # Remove temp image
+        os.remove(temp_path)
+
+        return JsonResponse({
+            "condition": predicted_condition,
+            "confidence": confidence,  # Return as float (0-1)
+            "risk_level": risk_level,
+            "advice": ai_advice
+        })
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+# === FOLLOW-UP API ===
+@csrf_exempt
+@login_required(login_url='skinsense:login')
+def upload_followup(request):
+    """Upload follow-up image and link it to a case"""
+    if request.method == 'POST' and request.FILES.get('image'):
+        from .models import Case, FollowUp
+        
+        case_id = request.POST.get('case_id')
+        
+        # If no case_id provided, use the most recent case
+        if not case_id:
+            latest_case = Case.objects.filter(user=request.user).order_by('-created_at').first()
+            if not latest_case:
+                return JsonResponse({'error': 'No previous case found. Please analyze an image first.'}, status=400)
+            case_id = latest_case.id
+        
+        try:
+            case = Case.objects.get(id=case_id, user=request.user)
+        except Case.DoesNotExist:
+            return JsonResponse({'error': 'Case not found'}, status=404)
+        
+        img_file = request.FILES['image']
+        temp_path = os.path.join('media', img_file.name)
+        os.makedirs('media', exist_ok=True)
+
+        # Save the uploaded file
+        with open(temp_path, 'wb+') as f:
+            for chunk in img_file.chunks():
+                f.write(chunk)
+
+        # Preprocess and predict
+        img = image.load_img(temp_path, target_size=(224, 224))
+        img_array = image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0) / 255.0
+
+        skin_model = get_model()
+        preds = skin_model.predict(img_array)
+        class_index = np.argmax(preds)
+        confidence = float(np.max(preds))
+
+        class_labels = ['acne', 'eczema', 'fungal infections', 'melasma', 'rosacea', 'vitiligo']
+        predicted_condition = class_labels[class_index]
+
+        if predicted_condition in ['melasma', 'vitiligo']:
+            risk_level = 'High'
+        elif predicted_condition in ['eczema', 'rosacea']:
+            risk_level = 'Medium'
+        else:
+            risk_level = 'Low'
+
+        # Get AI advice
+        try:
+            gemini_prompt = f"Follow-up analysis: Previous diagnosis was {case.condition}. Current scan shows {predicted_condition} with {confidence:.2%} confidence. Provide progress assessment and advice."
+            ai_advice = generate_ai_response(gemini_prompt)
+        except:
+            ai_advice = f"Follow-up for {predicted_condition}. Please consult your dermatologist."
+
+        # Save follow-up to database
+        from django.core.files.base import ContentFile
+        saved_image = ContentFile(img_file.read())
+        
+        followup = FollowUp.objects.create(
+            case=case,
+            condition=predicted_condition,
+            confidence=confidence,
+            risk_level=risk_level,
+            advice=ai_advice
+        )
+        followup.image.save(img_file.name, saved_image, save=True)
+
+        # Remove temp image
+        os.remove(temp_path)
+
+        return JsonResponse({
+            "condition": predicted_condition,
+            "confidence": confidence,
+            "risk_level": risk_level,
+            "advice": ai_advice,
+            "case_id": case.id
+        })
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+# === GET USER HISTORY ===
+@login_required(login_url='skinsense:login')
+def get_history(request):
+    """Get user's case history with follow-ups"""
+    from .models import Case
+    
+    cases = Case.objects.filter(user=request.user).order_by('-created_at')
+    
+    history = []
+    for case in cases:
+        followups = []
+        for followup in case.followups.all().order_by('created_at'):
+            followups.append({
+                'id': followup.id,
+                'image': followup.image.url if followup.image else None,
+                'condition': followup.condition,
+                'confidence': followup.confidence,
+                'risk_level': followup.risk_level,
+                'date': followup.created_at.strftime('%Y-%m-%d %H:%M')
+            })
+        
+        history.append({
+            'id': case.id,
+            'image': case.image.url if case.image else None,
+            'condition': case.condition,
+            'confidence': case.confidence,
+            'risk_level': case.risk_level,
+            'advice': case.advice,
+            'date': case.created_at.strftime('%Y-%m-%d %H:%M'),
+            'followups': followups
+        })
+    
+    return JsonResponse({'history': history})

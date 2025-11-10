@@ -84,20 +84,38 @@
     </header>
 
     <div class="container">
-        <h2>Upload Follow-Up Image</h2>
-        <p>Submit a new image for the same case to monitor progress.</p>
+        <h2>Follow-Up & History</h2>
+        <p>Upload a new follow-up image or view your diagnosis history</p>
 
         <div class="upload-box">
             <input type="file" id="followupImage" accept="image/*"><br>
             <img id="preview" style="max-width:300px;display:none;margin-top:1rem;">
             <button class="btn" id="submitFollowup">Upload Follow-Up</button>
         </div>
+
+        <div id="results" style="display:none; margin-top:2rem; padding:1rem; background:#e8f5e9; border-radius:8px;">
+            <h3>Follow-Up Result</h3>
+            <p><strong>Condition:</strong> <span id="resultCondition"></span></p>
+            <p><strong>Confidence:</strong> <span id="resultConfidence"></span></p>
+            <p><strong>Risk Level:</strong> <span id="resultRisk"></span></p>
+            <p><strong>Advice:</strong></p>
+            <p id="resultAdvice"></p>
+        </div>
+
+        <hr style="margin: 3rem 0;">
+
+        <h2>Your History</h2>
+        <div id="history"></div>
     </div>
 
     <script>
         const input = document.getElementById('followupImage');
         const preview = document.getElementById('preview');
         const btn = document.getElementById('submitFollowup');
+        const resultsDiv = document.getElementById('results');
+
+        // Load history on page load
+        loadHistory();
 
         input.addEventListener('change', e => {
             const file = e.target.files[0];
@@ -120,13 +138,81 @@
             const formData = new FormData();
             formData.append('image', file);
 
-            const res = await fetch('http://localhost:8000/api/followup/', {
-                method: 'POST',
-                body: formData
-            });
-            if (res.ok) alert('Follow-up uploaded successfully!');
-            else alert('Error uploading follow-up.');
+            try {
+                const res = await fetch('/api/followup/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+
+                    // Show results
+                    document.getElementById('resultCondition').textContent = data.condition;
+                    document.getElementById('resultConfidence').textContent = (data.confidence * 100).toFixed(2) + '%';
+                    document.getElementById('resultRisk').textContent = data.risk_level;
+                    document.getElementById('resultAdvice').textContent = data.advice;
+                    resultsDiv.style.display = 'block';
+
+                    alert('Follow-up uploaded successfully!');
+
+                    // Reload history
+                    loadHistory();
+                } else {
+                    const error = await res.json();
+                    alert('Error: ' + (error.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error uploading follow-up: ' + error.message);
+            }
         });
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/api/history/');
+                if (!res.ok) throw new Error('Failed to load history');
+
+                const data = await res.json();
+                const historyDiv = document.getElementById('history');
+
+                if (data.history.length === 0) {
+                    historyDiv.innerHTML = '<p style="color:#999;">No diagnosis history yet.</p>';
+                    return;
+                }
+
+                let html = '';
+                data.history.forEach(case_ => {
+                            html += `
+                        <div style="border:1px solid #ddd; padding:1rem; margin-bottom:1rem; border-radius:8px;">
+                            <div style="display:flex; gap:1rem;">
+                                ${case_.image ? `<img src="${case_.image}" style="width:150px; height:150px; object-fit:cover; border-radius:8px;">` : ''}
+                                <div style="flex:1;">
+                                    <p><strong>Date:</strong> ${case_.date}</p>
+                                    <p><strong>Condition:</strong> ${case_.condition}</p>
+                                    <p><strong>Confidence:</strong> ${(case_.confidence * 100).toFixed(2)}%</p>
+                                    <p><strong>Risk Level:</strong> ${case_.risk_level}</p>
+                                </div>
+                            </div>
+                            ${case_.followups.length > 0 ? `
+                                <div style="margin-top:1rem; padding-left:1rem; border-left:3px solid #4A9ACF;">
+                                    <h4>Follow-ups:</h4>
+                                    ${case_.followups.map(f => `
+                                        <div style="margin:0.5rem 0; padding:0.5rem; background:#f9f9f9; border-radius:4px;">
+                                            <p><strong>${f.date}</strong> - ${f.condition} (${(f.confidence * 100).toFixed(2)}%)</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                historyDiv.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading history:', error);
+                document.getElementById('history').innerHTML = '<p style="color:red;">Error loading history.</p>';
+            }
+        }
     </script>
 </body>
 

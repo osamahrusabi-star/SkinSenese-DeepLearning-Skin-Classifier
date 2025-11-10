@@ -13,4 +13,8 @@ urlpatterns = [
     path('logout/', views.logout_user, name='logout'),
     path('api/gemini/', views.gemini_api, name='gemini_api'),
     path('api/ai_advice/', views.ai_advice_api, name='ai_advice_api'),
+    path('api/analyze/', views.analyze_image, name='analyze_image'),
+    path('api/followup/', views.upload_followup, name='upload_followup'),
+    path('api/history/', views.get_history, name='get_history'),
+
 ]

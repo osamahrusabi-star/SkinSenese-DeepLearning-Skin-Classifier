@@ -155,20 +155,51 @@
             display: none;
             margin-top: 2rem;
             text-align: left;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results.show {
+            display: block !important;
         }
         
         .card {
             background: #eef5ff;
-            padding: 1rem;
+            padding: 1.5rem;
             border-radius: 8px;
             margin-bottom: 1rem;
+        }
+        
+        .card h3 {
+            color: #2B6CA3;
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+        
+        .card span {
+            color: #1E1E1E;
+            font-weight: 600;
         }
         
         .advice {
             background: #e8fbea;
             border-left: 4px solid #32a852;
-            padding: 1rem;
+            padding: 1.5rem;
             border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+        
+        .advice h3 {
+            color: #32a852;
+            margin-bottom: 0.8rem;
+        }
+        
+        .advice p {
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
         }
         
         canvas {
@@ -278,63 +309,158 @@
         const loading = document.getElementById('loading');
         const results = document.getElementById('results');
 
-        submitBtn.addEventListener('click', () => {
-            const imgSrc = preview.src;
-            if (!imgSrc) {
-                alert('Please select or capture an image first.');
-                return;
-            }
-
-            loading.style.display = 'block';
-            results.style.display = 'none';
-            viewResultBtn.style.display = 'none';
-
-            setTimeout(() => {
-                loading.style.display = 'none';
-                viewResultBtn.style.display = 'inline-block';
-                alert('Image submitted successfully! Click "View Result" to see analysis.');
-            }, 2000);
+        // Debug: Check if elements exist
+        console.log('Elements loaded:', {
+            submitBtn: !!submitBtn,
+            viewResultBtn: !!viewResultBtn,
+            loading: !!loading,
+            results: !!results
         });
 
-        viewResultBtn.addEventListener('click', async() => {
-            const file = imageDevice.files[0] || imageCamera.files[0];
-            if (!file) {
-                alert('Please select or capture an image first.');
-                return;
-            }
+        if (!submitBtn || !loading || !results) {
+            console.error('Required elements not found!');
+        }
 
-            loading.style.display = 'block';
-            results.style.display = 'none';
+        // Simplified: Submit button now does everything
+        if (submitBtn) {
+            submitBtn.addEventListener('click', async() => {
+                console.log('Submit button clicked!');
 
-            const formData = new FormData();
-            formData.append('image', file);
+                const file = imageDevice.files[0] || imageCamera.files[0];
+                if (!file) {
+                    alert('Please select or capture an image first.');
+                    return;
+                }
 
-            try {
-                const response = await fetch('http://localhost:8000/api/analyze/', {
-                    method: 'POST',
-                    body: formData,
-                });
+                console.log('File selected:', file.name);
 
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                // Show loading
+                loading.style.display = 'block';
+                results.style.display = 'none';
+                if (viewResultBtn) viewResultBtn.style.display = 'none';
 
-                const data = await response.json();
+                const formData = new FormData();
+                formData.append('image', file);
 
-                loading.style.display = 'none';
-                results.style.display = 'block';
+                try {
+                    console.log('Sending request to API...');
+                    const response = await fetch('/api/analyze/', {
+                        method: 'POST',
+                        body: formData,
+                    });
 
-                document.getElementById('condition').textContent = data.condition || 'Unknown';
-                document.getElementById('confidence').textContent =
-                    data.confidence ? (data.confidence * 100).toFixed(1) + '%' : 'N/A';
-                document.getElementById('risk').textContent = data.risk_level || 'N/A';
-                document.getElementById('advice').textContent = data.advice || 'No advice available.';
+                    console.log('Response received!');
+                    console.log('Response status:', response.status);
+                    console.log('Response ok:', response.ok);
 
-                if (data.timeline) renderChart(data.timeline);
-            } catch (error) {
-                console.error('Error:', error);
-                loading.style.display = 'none';
-                alert('Something went wrong. Please try again later.');
-            }
-        });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Error response:', errorText);
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('Response data:', data);
+
+                    loading.style.display = 'none';
+
+                    // Show results section
+                    results.style.display = 'block';
+                    results.classList.add('show');
+
+                    // Update content
+                    document.getElementById('condition').textContent = data.condition || 'Unknown';
+                    document.getElementById('confidence').textContent =
+                        data.confidence ? (data.confidence * 100).toFixed(1) + '%' : 'N/A';
+                    document.getElementById('risk').textContent = data.risk_level || 'N/A';
+                    document.getElementById('advice').textContent = data.advice || 'No advice available.';
+
+                    console.log('✓ Results displayed!');
+
+                    // Scroll to results
+                    results.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest'
+                    });
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    loading.style.display = 'none';
+
+                    let errorMessage = 'Error: ' + error.message;
+
+                    if (error.message.includes('Failed to fetch')) {
+                        errorMessage = 'Cannot connect to server!\n\n' +
+                            'Please check:\n' +
+                            '1. Django server is running (python manage.py runserver)\n' +
+                            '2. Server is at http://127.0.0.1:8000\n' +
+                            '3. Check browser console (F12) for details';
+                    }
+
+                    alert(errorMessage);
+                }
+            });
+        }
+
+        // Keep the old View Result button functional (backup)
+        if (viewResultBtn) {
+            viewResultBtn.addEventListener('click', async() => {
+                const file = imageDevice.files[0] || imageCamera.files[0];
+                if (!file) {
+                    alert('Please select or capture an image first.');
+                    return;
+                }
+
+                loading.style.display = 'block';
+                results.style.display = 'none';
+
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const response = await fetch('/api/analyze/', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    console.log('Response status:', response.status);
+
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                    const data = await response.json();
+                    console.log('Response data:', data); // Debug log
+                    console.log('Condition:', data.condition);
+                    console.log('Confidence:', data.confidence);
+                    console.log('Risk Level:', data.risk_level);
+                    console.log('Advice:', data.advice);
+
+                    loading.style.display = 'none';
+
+                    // Show results section
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.style.display = 'block';
+                    resultsDiv.classList.add('show');
+                    console.log('Results div display:', resultsDiv.style.display);
+
+                    // Update content
+                    document.getElementById('condition').textContent = data.condition || 'Unknown';
+                    document.getElementById('confidence').textContent =
+                        data.confidence ? (data.confidence * 100).toFixed(1) + '%' : 'N/A';
+                    document.getElementById('risk').textContent = data.risk_level || 'N/A';
+                    document.getElementById('advice').textContent = data.advice || 'No advice available.';
+
+                    console.log('✓ Results displayed successfully!');
+                    console.log('✓ Condition element:', document.getElementById('condition').textContent);
+                    console.log('✓ Results div visible:', window.getComputedStyle(resultsDiv).display);
+
+                    if (data.timeline) renderChart(data.timeline);
+                } catch (error) {
+                    console.error('Error:', error);
+                    loading.style.display = 'none';
+                    alert('Something went wrong. Check console for details: ' + error.message);
+                }
+            });
+        }
 
         function renderChart() {
             const ctx = document.getElementById('chart').getContext('2d');
