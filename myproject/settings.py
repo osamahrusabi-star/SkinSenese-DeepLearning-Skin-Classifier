@@ -99,6 +99,10 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# === MEDIA FILES ===
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # === CSRF & SESSION CONFIG ===
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",

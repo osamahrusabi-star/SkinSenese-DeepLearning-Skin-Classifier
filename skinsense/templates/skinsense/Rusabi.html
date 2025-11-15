@@ -1,0 +1,185 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Osamah Al-Rusabi — Team | SkinSense</title>
+    <!-- ===== CSS START: styles for Rusabi profile ===== -->
+    <style>
+         :root {
+            --blue: #2B6CA3;
+            --light: #F5F7FA;
+            --accent: #4A9ACF
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif
+        }
+        
+        body {
+            background: rgb(53, 167, 255);
+            color: #1e1e1e;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .08);
+            overflow: hidden
+        }
+        /* ===== HEADER ===== */
+        
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            background: var(--blue);
+            color: #fff;
+        }
+        
+        header .brand {
+            display: flex;
+            gap: 10px;
+            align-items: center
+        }
+        
+        header img {
+            width: 40px;
+            height: 40px
+        }
+        /* ===== PROFILE ===== */
+        
+        .profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2.5rem;
+        }
+        
+        .avatar {
+            width: 190px;
+            height: 210px;
+            border-radius: 500%;
+            object-fit: cover;
+            border: 6px solid #156ea9;
+            box-shadow: 0 6px 18px rgba(43, 108, 163, .15)
+        }
+        
+        .lnk-icon {
+            width: 18px;
+            height: 18px;
+            vertical-align: middle;
+            margin-right: 8px;
+            fill: currentColor
+        }
+        
+        .contact-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px
+        }
+        
+        h1 {
+            color: var(--blue);
+            margin: 1rem 0 0.25rem
+        }
+        
+        .role {
+            color: var(--accent);
+            margin-bottom: 1rem
+        }
+        /* ===== CONTACTS ===== */
+        
+        .contacts {
+            display: flex;
+            flex-direction: column;
+            gap: .6rem;
+            margin-top: 1rem;
+            width: 100%;
+            max-width: 520px;
+        }
+        
+        .contact-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: .7rem 1rem;
+            background: #f7fbff;
+            border-radius: 8px;
+            border: 1px solid rgba(43, 108, 163, .06)
+        }
+        
+        .contact-row a {
+            color: var(--blue);
+            text-decoration: none;
+            font-weight: 600;
+            white-space: nowrap
+        }
+        
+        .back {
+            display: inline-block;
+            margin: 1rem;
+            padding: .5rem .9rem;
+            background: var(--light);
+            border-radius: 8px;
+            color: var(--blue);
+            text-decoration: none;
+            border: 1px solid rgba(43, 108, 163, .08)
+        }
+        
+        @media(min-width:700px) {
+            .profile {
+                flex-direction: row;
+                gap: 2rem;
+                align-items: center
+            }
+            .profile .info {
+                flex: 1;
+                text-align: left
+            }
+        }
+    </style>
+    <!-- ===== CSS END ===== -->
+</head>
+
+<!-- ===== HTML CONTENT START ===== -->
+
+<body>
+    <div class="container">
+        <header>
+            <div></div>
+            <nav>
+                <a href="{% url 'skinsense:about' %}" class="back">Back to About</a>
+            </nav>
+        </header>
+
+        <section class="profile">
+            <div class="photo">
+                <img class="avatar" src="{% static 'skinsense/member1.jpg' %}" alt="Osamah Al-Rusabi" onerror="this.onerror=null;this.src='Photos/Rusabi.jpeg'" />
+            </div>
+            <div class="info">
+                <h1>Osamah Al-Rusabi</h1>
+
+                <div class="contacts">
+                    <div class="contact-row">📞 <strong>Phone:</strong>&nbsp;<span>+601221042210</span></div>
+                    <div class="contact-row">📧 <strong>Email:</strong>&nbsp;<a href="mailto:osama.osama71162@gmail.com">osama.osama71162@gmail.com</a></div>
+                    <div class="contact-row"><span class="contact-label"><svg class="lnk-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1 4.98 2.12 4.98 3.5zM0 8h5v16H0V8zm7 0h4.8v2.1h.1c.7-1.2 2.4-2.5 5-2.5 5.4 0 6.4 3.6 6.4 8.3V24H19v-7.8c0-1.9 0-4.3-2.6-4.3-2.6 0-3 2-3 4.1V24H7V8z"/></svg><strong>LinkedIn:</strong></span>&nbsp;
+                        <a href="https://linkedin.com/in/osamah-al-rusabi-7bb2a8337" target="_blank" rel="noopener">linkedin.com/in/osamah-al-rusabi-7bb2a8337</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+
+
+</html>

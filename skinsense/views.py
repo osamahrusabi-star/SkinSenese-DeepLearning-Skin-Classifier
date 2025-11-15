@@ -24,6 +24,17 @@ def about_page(request):
     return render(request, 'skinsense/about.html')
 
 
+# === TEAM MEMBER PAGES ===
+def rusabi_page(request):
+    return render(request, 'skinsense/Rusabi.html')
+
+def mohanad_page(request):
+    return render(request, 'skinsense/Mohanad.html')
+
+def majeed_page(request):
+    return render(request, 'skinsense/Majeed.html')
+
+
 # === LOGIN PAGE ===
 def login_page(request):
     if request.method == 'POST':
@@ -152,10 +163,12 @@ def analyze_image(request):
             for chunk in img_file.chunks():
                 f.write(chunk)
 
-        # Preprocess image for MobileNetV2
+        # Preprocess image for ResNet50 (using correct ResNet50 preprocessing)
+        from tensorflow.keras.applications.resnet50 import preprocess_input
         img = image.load_img(temp_path, target_size=(224, 224))
         img_array = image.img_to_array(img)
-        img_array = np.expand_dims(img_array, axis=0) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array = preprocess_input(img_array)  # ResNet50 preprocessing
 
         # Get the model (lazy loaded)
         skin_model = get_model()
@@ -200,9 +213,11 @@ def analyze_image(request):
         # Save to database if user is logged in
         if request.user.is_authenticated:
             from .models import Case
-            # Save the image permanently
             from django.core.files.base import ContentFile
-            saved_image = ContentFile(img_file.read())
+            
+            # Re-read the file from temp path to save to database
+            with open(temp_path, 'rb') as f:
+                saved_image = ContentFile(f.read())
             
             case = Case.objects.create(
                 user=request.user,
@@ -257,10 +272,12 @@ def upload_followup(request):
             for chunk in img_file.chunks():
                 f.write(chunk)
 
-        # Preprocess and predict
+        # Preprocess and predict (using ResNet50 preprocessing)
+        from tensorflow.keras.applications.resnet50 import preprocess_input
         img = image.load_img(temp_path, target_size=(224, 224))
         img_array = image.img_to_array(img)
-        img_array = np.expand_dims(img_array, axis=0) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array = preprocess_input(img_array)  # ResNet50 preprocessing
 
         skin_model = get_model()
         preds = skin_model.predict(img_array)
@@ -286,7 +303,10 @@ def upload_followup(request):
 
         # Save follow-up to database
         from django.core.files.base import ContentFile
-        saved_image = ContentFile(img_file.read())
+        
+        # Re-read the file from temp path to save to database
+        with open(temp_path, 'rb') as f:
+            saved_image = ContentFile(f.read())
         
         followup = FollowUp.objects.create(
             case=case,

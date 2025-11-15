@@ -83,89 +83,17 @@
         </nav>
     </header>
 
+
     <div class="container">
-        <h2>Follow-Up & History</h2>
-        <p>Upload a new follow-up image or view your diagnosis history</p>
+        <h2>Your Diagnosis History</h2>
+        <p>View your previous diagnoses and follow-ups</p>
 
-        <div class="upload-box">
-            <input type="file" id="followupImage" accept="image/*"><br>
-            <img id="preview" style="max-width:300px;display:none;margin-top:1rem;">
-            <button class="btn" id="submitFollowup">Upload Follow-Up</button>
-        </div>
-
-        <div id="results" style="display:none; margin-top:2rem; padding:1rem; background:#e8f5e9; border-radius:8px;">
-            <h3>Follow-Up Result</h3>
-            <p><strong>Condition:</strong> <span id="resultCondition"></span></p>
-            <p><strong>Confidence:</strong> <span id="resultConfidence"></span></p>
-            <p><strong>Risk Level:</strong> <span id="resultRisk"></span></p>
-            <p><strong>Advice:</strong></p>
-            <p id="resultAdvice"></p>
-        </div>
-
-        <hr style="margin: 3rem 0;">
-
-        <h2>Your History</h2>
         <div id="history"></div>
     </div>
 
     <script>
-        const input = document.getElementById('followupImage');
-        const preview = document.getElementById('preview');
-        const btn = document.getElementById('submitFollowup');
-        const resultsDiv = document.getElementById('results');
-
         // Load history on page load
         loadHistory();
-
-        input.addEventListener('change', e => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = () => {
-                preview.src = reader.result;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        });
-
-        btn.addEventListener('click', async() => {
-            const file = input.files[0];
-            if (!file) {
-                alert('Please choose a file first.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('image', file);
-
-            try {
-                const res = await fetch('/api/followup/', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-
-                    // Show results
-                    document.getElementById('resultCondition').textContent = data.condition;
-                    document.getElementById('resultConfidence').textContent = (data.confidence * 100).toFixed(2) + '%';
-                    document.getElementById('resultRisk').textContent = data.risk_level;
-                    document.getElementById('resultAdvice').textContent = data.advice;
-                    resultsDiv.style.display = 'block';
-
-                    alert('Follow-up uploaded successfully!');
-
-                    // Reload history
-                    loadHistory();
-                } else {
-                    const error = await res.json();
-                    alert('Error: ' + (error.error || 'Unknown error'));
-                }
-            } catch (error) {
-                alert('Error uploading follow-up: ' + error.message);
-            }
-        });
 
         async function loadHistory() {
             try {
@@ -197,8 +125,14 @@
                                 <div style="margin-top:1rem; padding-left:1rem; border-left:3px solid #4A9ACF;">
                                     <h4>Follow-ups:</h4>
                                     ${case_.followups.map(f => `
-                                        <div style="margin:0.5rem 0; padding:0.5rem; background:#f9f9f9; border-radius:4px;">
-                                            <p><strong>${f.date}</strong> - ${f.condition} (${(f.confidence * 100).toFixed(2)}%)</p>
+                                        <div style="margin:0.5rem 0; padding:0.5rem; background:#f9f9f9; border-radius:4px; display:flex; gap:1rem; align-items:center;">
+                                            ${f.image ? `<img src="${f.image}" style="width:100px; height:100px; object-fit:cover; border-radius:4px;">` : ''}
+                                            <div style="flex:1;">
+                                                <p><strong>${f.date}</strong></p>
+                                                <p><strong>Condition:</strong> ${f.condition}</p>
+                                                <p><strong>Confidence:</strong> ${(f.confidence * 100).toFixed(2)}%</p>
+                                                <p><strong>Risk Level:</strong> ${f.risk_level}</p>
+                                            </div>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -214,6 +148,10 @@
             }
         }
     </script>
+    <footer>
+        <p>© 2025 SkinSense | Developed by Group 27, Albukhary International University</p>
+    </footer>
+
 </body>
 
 </html>
